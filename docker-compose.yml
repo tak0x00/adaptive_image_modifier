@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    restart: always
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      - ORIGIN_DOMAIN="YOUR_SOME_DOMAIN"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-golang
+    volumes:
+      - ./:/go/src
+    ports:
+      - "8080"
