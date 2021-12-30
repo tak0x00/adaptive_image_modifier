@@ -14,6 +14,8 @@ RUN apk update && apk add --no-cache make\
         libzip\
         libzip-dev
 RUN go get -u github.com/cosmtrek/air
+RUN go get -u github.com/kettek/apng
+
 
 WORKDIR /go/src
 CMD ["air", "-c", ".air.toml"]

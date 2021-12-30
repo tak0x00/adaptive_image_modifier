@@ -7,12 +7,14 @@ import (
 	"strings"
 	"io/ioutil"
     "net/http"
+	"bytes"
     "image"
 	"image/png"
 	"image/gif"
 	"image/jpeg"
     "golang.org/x/image/draw"
     "github.com/harukasan/go-libwebp/webp"
+	"github.com/kettek/apng"
 )
 
 func main() {
@@ -34,19 +36,36 @@ func main() {
 			w.Write([]byte(err.Error()))
 			return
 		}
+		respBody, _ := ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != 200 {
 			w.WriteHeader(resp.StatusCode)
-			byteArray, _ := ioutil.ReadAll(resp.Body)
-			w.Write(byteArray)
+			w.Write(respBody)
 			return
 		}
 		defer resp.Body.Close()
 
-		img, src_image_type, err := image.Decode(resp.Body)
+		img, src_image_type, err := image.Decode(bytes.NewReader(respBody))
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
+		}
+		// agif/apngは処理しない #2
+		if src_image_type == "gif" {
+			tmpimg, _ := gif.DecodeAll(bytes.NewReader(respBody))
+			if (len(tmpimg.Image) > 1) {
+				w.WriteHeader(resp.StatusCode)
+				w.Write(respBody)
+				return
+			}
+		}
+		if src_image_type == "png" {
+			tmpimg, _ := apng.DecodeAll(bytes.NewReader(respBody))
+			if (len(tmpimg.Frames) > 1) {
+				w.WriteHeader(resp.StatusCode)
+				w.Write(respBody)
+				return
+			}
 		}
 
 		var dst *image.RGBA

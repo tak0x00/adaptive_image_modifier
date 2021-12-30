@@ -1,5 +1,7 @@
 github.com/harukasan/go-libwebp v0.0.0-20190703060927-68562c9c99af h1:WmgySY+bcDEGQ42RmkJhL5cPbnWi3nFpAyRuRxoofDY=
 github.com/harukasan/go-libwebp v0.0.0-20190703060927-68562c9c99af/go.mod h1:ldE44ycRKJi6dVHIWnbUlEJqHQUhK5gJ4TKIfAwFbCg=
+github.com/kettek/apng v0.0.0-20191108220231-414630eed80f h1:dnCYnTSltLuPMfc7dMrkz2uBUcEf/OFBR8yRh3oRT98=
+github.com/kettek/apng v0.0.0-20191108220231-414630eed80f/go.mod h1:x78/VRQYKuCftMWS0uK5e+F5RJ7S4gSlESRWI0Prl6Q=
 golang.org/x/image v0.0.0-20211028202545-6944b10bf410 h1:hTftEOvwiOq2+O8k2D5/Q7COC7k5Qcrgc2TFURJYnvQ=
 golang.org/x/image v0.0.0-20211028202545-6944b10bf410/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
 golang.org/x/text v0.3.6/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
