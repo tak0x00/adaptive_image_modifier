@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"io/ioutil"
     "net/http"
     "image"
@@ -18,21 +20,24 @@ func main() {
     mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		origin_domain := r.URL.Query().Get("origin_domain")
 		path := r.URL.Path
-		resize_mode := r.URL.Query().Get("resize_mode")
+		avaliable_format_csv := r.URL.Query().Get("resize_format")
 		max_width_string := r.URL.Query().Get("resize_resolution")
 		max_width, _ := strconv.Atoi(max_width_string)
 
+		w.Header().Add("X-imtest-request_path", path)
+		w.Header().Add("X-imtest-avaliable_format", avaliable_format_csv)
+		w.Header().Add("X-imtest-max_width", max_width_string)
 
 		resp, err := http.Get("https://" + origin_domain + path)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
 		if resp.StatusCode != 200 {
 			w.WriteHeader(resp.StatusCode)
 			byteArray, _ := ioutil.ReadAll(resp.Body)
 			w.Write(byteArray)
-			return
-		}
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
 			return
 		}
 		defer resp.Body.Close()
@@ -59,35 +64,24 @@ func main() {
 			draw.Copy(dst,image.Point{0,0}, img, img.Bounds(), draw.Over, nil)
 		}
 
-		w.Header().Add("X-imtest-mode", resize_mode)
-		w.Header().Add("X-imtest-max_width", max_width_string)
 		w.Header().Add("X-imtest-convert_width", strconv.Itoa(dst.Bounds().Dx()))
 		w.Header().Add("X-imtest-convert_height", strconv.Itoa(dst.Bounds().Dy()))
 
 
-		// 形式変換
-		dst_image_type := src_image_type;
-		switch (resize_mode) {
-		case "iphone":
-			// 変換なし
+		avaliable_format := strings.Split(avaliable_format_csv, "_")
 
-		// https://developer.android.com/guide/topics/media/media-formats?hl=ja
-		case "androidaosp":
-			// ~android 5
-			// 変換なし
-
-		case "androidchrome":
-			// android 6 ~
-			dst_image_type = "webp"
-
-		case "pc":
-			dst_image_type = "webp"
-
-		default:
-			// 変換なし
+		selected_format := src_image_type
+		fmt.Println(selected_format)
+		// FIXME: issue#4
+		if (len(avaliable_format) > 0) {
+			selected_format = avaliable_format[0]
 		}
 
-		switch (dst_image_type) {
+		w.Header().Add("X-imtest-convert_format", selected_format)
+
+
+		// 形式変換
+		switch (selected_format) {
 		case "jpeg":
 			jpeg.Encode(w, dst, &jpeg.Options{Quality: 100})
 		case "png":
