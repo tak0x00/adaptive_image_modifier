@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"strconv"
+	"io/ioutil"
     "net/http"
     "image"
 	"image/png"
@@ -23,6 +24,12 @@ func main() {
 
 
 		resp, err := http.Get("https://" + origin_domain + path)
+		if resp.StatusCode != 200 {
+			w.WriteHeader(resp.StatusCode)
+			byteArray, _ := ioutil.ReadAll(resp.Body)
+			w.Write(byteArray)
+			return
+		}
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
