@@ -11,10 +11,10 @@ import (
     "image"
 	"image/png"
 	"image/gif"
-	"image/jpeg"
     "golang.org/x/image/draw"
     "github.com/harukasan/go-libwebp/webp"
 	"github.com/kettek/apng"
+	"github.com/pixiv/go-libjpeg/jpeg"
 )
 
 func main() {
@@ -104,7 +104,7 @@ func main() {
 		// 形式変換
 		switch (selected_format) {
 		case "jpeg":
-			jpeg.Encode(w, dst, &jpeg.Options{Quality: 100})
+			jpeg.Encode(w, dst, &jpeg.EncoderOptions{Quality: 100})
 		case "png":
 			png.Encode(w, dst)
 		case "gif":

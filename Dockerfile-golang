@@ -12,9 +12,11 @@ RUN apk update && apk add --no-cache make\
         libwebp-dev\
         tiff-dev\
         libzip\
-        libzip-dev
+        libzip-dev\
+        libjpeg-turbo-dev
 RUN go get -u github.com/cosmtrek/air
 RUN go get -u github.com/kettek/apng
+RUN go get -u github.com/pixiv/go-libjpeg/jpeg
 
 
 WORKDIR /go/src
