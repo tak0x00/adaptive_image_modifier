@@ -1,0 +1,9 @@
+FROM varnish:latest
+
+COPY varnish/default.vcl /etc/varnish/
+COPY varnish/opts /etc/varnish/opts
+COPY varnish/replaceenv.sh /
+COPY varnish/entrypoint.sh /
+RUN chmod 755 /replaceenv.sh
+RUN chmod 755 /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

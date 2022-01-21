@@ -19,12 +19,12 @@ import (
 )
 
 func main() {
-    mux := http.NewServeMux()
-    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		origin_domain := r.URL.Query().Get("origin_domain")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		origin_domain := r.Header.Get("x-imtest-origin-domain")
+		avaliable_format_csv := r.Header.Get("x-imtest-format-list")
+		max_width_string := r.Header.Get("x-imtest-resolution")
 		path := r.URL.Path
-		avaliable_format_csv := r.URL.Query().Get("resize_format")
-		max_width_string := r.URL.Query().Get("resize_resolution")
 		max_width, _ := strconv.Atoi(max_width_string)
 
 		w.Header().Add("X-imtest-request_path", path)
