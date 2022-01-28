@@ -1,5 +1,6 @@
 vcl 4.0;
 import std;
+include "opts/varnish-devicedetect/devicedetect.vcl";
 
 backend optimizer {
     .host = "app";
@@ -11,6 +12,8 @@ backend default {
 }
 
 sub vcl_recv {
+    call devicedetect;
+
     # strip all query strings
     set req.http.X-Original-Url = req.url;
     set req.url = regsub(req.url, "\?.*$", "");
@@ -22,8 +25,8 @@ sub vcl_recv {
 
     if (req.url ~ "\.(png|jpg|jpeg|gif|webp)$" && req.http.X-Original-Url !~ "NO_IM") {
         set req.http.x-imtest-origin-domain = "${ORIGIN_DOMAIN}";
-        set req.http.x-imtest-format-list = "webp_png_jpg";
-        set req.http.x-imtest-resolution = "4096";
+        include "opts/device-formatlist.vcl";
+        include "opts/device-resolutionlist.vcl";
         set req.backend_hint = optimizer;
     } else {
         set req.backend_hint = default;
