@@ -1,15 +1,15 @@
 version: '3.7'
 
 services:
-  nginx:
+  varnish:
     build:
       context: .
-      dockerfile: Dockerfile-nginx
+      dockerfile: Dockerfile-varnish
     restart: always
     ports:
       - "127.0.0.1:8080:80"
     environment:
-      - ORIGIN_DOMAIN="YOUR_SOME_DOMAIN"
+      - ORIGIN_DOMAIN=your_origin_domain
 
   app:
     build:

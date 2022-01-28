@@ -1,29 +1,30 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/gif"
+	"image/png"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
-	"io/ioutil"
-    "net/http"
-	"bytes"
-    "image"
-	"image/png"
-	"image/gif"
-    "golang.org/x/image/draw"
-    "github.com/harukasan/go-libwebp/webp"
+
+	"github.com/harukasan/go-libwebp/webp"
 	"github.com/kettek/apng"
 	"github.com/pixiv/go-libjpeg/jpeg"
+	"golang.org/x/image/draw"
 )
 
 func main() {
-    mux := http.NewServeMux()
-    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		origin_domain := r.URL.Query().Get("origin_domain")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		origin_domain := r.Header.Get("x-imtest-origin-domain")
+		avaliable_format_csv := r.Header.Get("x-imtest-format-list")
+		max_width_string := r.Header.Get("x-imtest-resolution")
 		path := r.URL.Path
-		avaliable_format_csv := r.URL.Query().Get("resize_format")
-		max_width_string := r.URL.Query().Get("resize_resolution")
 		max_width, _ := strconv.Atoi(max_width_string)
 
 		w.Header().Add("X-imtest-request_path", path)
@@ -53,7 +54,7 @@ func main() {
 		// agif/apngは処理しない issue#2
 		if src_image_type == "gif" {
 			tmpimg, _ := gif.DecodeAll(bytes.NewReader(respBody))
-			if (len(tmpimg.Image) > 1) {
+			if len(tmpimg.Image) > 1 {
 				w.WriteHeader(resp.StatusCode)
 				w.Write(respBody)
 				return
@@ -61,7 +62,7 @@ func main() {
 		}
 		if src_image_type == "png" {
 			tmpimg, _ := apng.DecodeAll(bytes.NewReader(respBody))
-			if (len(tmpimg.Frames) > 1) {
+			if len(tmpimg.Frames) > 1 {
 				w.WriteHeader(resp.StatusCode)
 				w.Write(respBody)
 				return
@@ -72,15 +73,15 @@ func main() {
 
 		// まずリサイズ
 		rct := src_img.Bounds()
-		if (rct.Dx() > max_width) {
+		if rct.Dx() > max_width {
 			dst_width := float64(max_width)
-			dst_height := math.Ceil(dst_width / float64(rct.Dx() * rct.Dy()))
+			dst_height := math.Ceil(dst_width / float64(rct.Dx()*rct.Dy()))
 
 			dst = image.NewRGBA(image.Rect(0, 0, int(dst_width), int(dst_height)))
 			draw.CatmullRom.Scale(dst, dst.Bounds(), src_img, src_img.Bounds(), draw.Over, nil)
 		} else {
 			dst = image.NewRGBA(image.Rect(0, 0, rct.Dx(), rct.Dy()))
-			draw.Copy(dst,image.Point{0,0}, src_img, src_img.Bounds(), draw.Over, nil)
+			draw.Copy(dst, image.Point{0, 0}, src_img, src_img.Bounds(), draw.Over, nil)
 		}
 		// 気休め。
 		src_img = nil
@@ -88,21 +89,19 @@ func main() {
 		w.Header().Add("X-imtest-convert_width", strconv.Itoa(dst.Bounds().Dx()))
 		w.Header().Add("X-imtest-convert_height", strconv.Itoa(dst.Bounds().Dy()))
 
-
 		avaliable_format := strings.Split(avaliable_format_csv, "_")
 
 		selected_format := src_image_type
 		fmt.Println(selected_format)
 		// FIXME: issue#4
-		if (len(avaliable_format) > 0) {
+		if len(avaliable_format) > 0 {
 			selected_format = avaliable_format[0]
 		}
 
 		w.Header().Add("X-imtest-convert_format", selected_format)
 
-
 		// 形式変換
-		switch (selected_format) {
+		switch selected_format {
 		case "jpeg":
 			jpeg.Encode(w, dst, &jpeg.EncoderOptions{Quality: 100})
 		case "png":
@@ -114,5 +113,5 @@ func main() {
 			err = webp.EncodeRGBA(w, dst, con)
 		}
 	})
-    http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(":8080", mux)
 }

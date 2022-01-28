@@ -1,5 +1,0 @@
-FROM nginx:latest
-
-COPY nginx/conf /etc/nginx
-COPY nginx/start.sh /tmp/start.sh
-ENTRYPOINT ["bash", "/tmp/start.sh"]

@@ -1,0 +1,3 @@
+[submodule "varnish/opts/varnish-devicedetect"]
+	path = varnish/opts/varnish-devicedetect
+	url = https://github.com/varnishcache/varnish-devicedetect
