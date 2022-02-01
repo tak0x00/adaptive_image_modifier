@@ -1,6 +1,7 @@
 vcl 4.0;
 import std;
 include "opts/varnish-devicedetect/devicedetect.vcl";
+include "opts/pathlist.vcl";
 
 backend optimizer {
     .host = "app";
@@ -22,8 +23,17 @@ sub vcl_recv {
         return (synth(1410, "It's gone."));
     }
 
+    set req.http.x-imtest-use = "true";
+    call check_target_path;
+    if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
+        set req.http.x-imtest-use = "false";
+    }
+    if (req.http.X-Original-Url ~ "NO_IM") {
+        set req.http.x-imtest-use = "false";
+    }
 
-    if (req.url ~ "\.(png|jpg|jpeg|gif|webp)$" && req.http.X-Original-Url !~ "NO_IM") {
+
+    if (req.http.x-imtest-use == "true") {
         set req.http.x-imtest-origin-domain = "${ORIGIN_DOMAIN}";
         include "opts/device-formatlist.vcl";
         include "opts/device-resolutionlist.vcl";
@@ -63,4 +73,8 @@ sub vcl_synth {
         set resp.status = 410;
         return (deliver);
     }
+}
+
+sub vcl_deliver {
+    set resp.http.x-imtest-use = req.http.x-imtest-use;
 }
