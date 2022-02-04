@@ -35,6 +35,8 @@ sub vcl_recv {
 
     if (req.http.x-imtest-use == "true") {
         set req.http.x-imtest-origin-domain = "${ORIGIN_DOMAIN}";
+        include "opts/default-device-formatlist.vcl";
+        include "opts/default-device-resolutionlist.vcl";
         include "opts/device-formatlist.vcl";
         include "opts/device-resolutionlist.vcl";
         set req.backend_hint = optimizer;
