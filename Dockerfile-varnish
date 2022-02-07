@@ -1,4 +1,16 @@
-FROM varnish:latest
+FROM varnish:7.0-alpine
+
+RUN mkdir -p /tmp/vmods && \
+    apk --no-cache add make gcc g++ bash git automake autoconf libtool python3 py-docutils && \
+    cd /tmp/vmods && \
+    git clone --branch 7.0 --single-branch https://github.com/varnish/varnish-modules.git && \
+    cd varnish-modules && \
+     ./bootstrap && \
+    ./configure && \
+    make && \
+    make install && \
+    rm -rf /tmp/vmods
+RUN apk del make gcc g++ bash git automake autoconf python3 py-docutils
 
 COPY varnish/default.vcl /etc/varnish/
 COPY varnish/opts /etc/varnish/opts
