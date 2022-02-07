@@ -1,5 +1,6 @@
 vcl 4.0;
 import std;
+import header;
 include "opts/varnish-devicedetect/devicedetect.vcl";
 include "opts/pathlist.vcl";
 
@@ -96,5 +97,16 @@ sub vcl_synth {
 }
 
 sub vcl_deliver {
-    set resp.http.x-imtest-use = req.http.x-imtest-use;
+    set resp.http.X-Imtest-use = req.http.x-imtest-use;
+    set resp.http.X-Imtest-client-ip = client.ip;
+    if (obj.hits > 0) {
+        set resp.http.X-imtest-cache = "HIT";
+        set resp.http.X-imtest-cache-hits = obj.hits;
+    }
+    else {
+        set resp.http.X-imtest-cache = "MISS";
+    }
+    if (req.http.X-imtest-debug != "true") {
+        header.regsub(resp, "^(?i)X-imtest.+", "");
+    }
 }
