@@ -3,6 +3,14 @@ import std;
 include "opts/varnish-devicedetect/devicedetect.vcl";
 include "opts/pathlist.vcl";
 
+acl purge {
+    "localhost";
+    "172.16.0.0"/12;
+    "10.0.0.0"/8;
+    "192.168.0.0"/16;
+    ${PURGEABLE_NETWORK};
+}
+
 backend optimizer {
     .host = "app";
     .port = "8080";
@@ -21,6 +29,16 @@ sub vcl_recv {
 
     if (req.url ~ "\/favicon.ico$") {
         return (synth(1410, "It's gone."));
+    }
+
+    if (req.method == "PURGE") {
+        if (!client.ip ~ purge) {
+            return(synth(403, "Not allowed."));
+        }
+        ban("req.http.host == " + req.http.host +
+            " && req.url ~ " + req.url);
+
+        return(synth(200, "PURGE accepted"));
     }
 
     set req.http.x-imtest-use = "true";
