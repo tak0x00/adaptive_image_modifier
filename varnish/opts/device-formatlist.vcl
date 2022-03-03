@@ -1,1 +1,1 @@
-# if (req.http.X-UA-Device ~ "pc") { set req.http.x-imtest-format-list = "webp_png_jpg"; }
+# if (req.http.X-UA-Device ~ "pc") { set req.http.x-aim-format-list = "webp_png_jpg"; }

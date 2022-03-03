@@ -42,18 +42,18 @@ sub vcl_recv {
         return(synth(200, "PURGE accepted"));
     }
 
-    set req.http.x-imtest-use = "true";
+    set req.http.x-aim-use = "true";
     call check_target_path;
     if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
-        set req.http.x-imtest-use = "false";
+        set req.http.x-aim-use = "false";
     }
     if (req.http.X-Original-Url ~ "NO_IM") {
-        set req.http.x-imtest-use = "false";
+        set req.http.x-aim-use = "false";
     }
 
 
-    if (req.http.x-imtest-use == "true") {
-        set req.http.x-imtest-origin-domain = "${ORIGIN_DOMAIN}";
+    if (req.http.x-aim-use == "true") {
+        set req.http.x-aim-origin-domain = "${ORIGIN_DOMAIN}";
         include "opts/default-device-formatlist.vcl";
         include "opts/default-device-resolutionlist.vcl";
         include "opts/device-formatlist.vcl";
@@ -66,9 +66,9 @@ sub vcl_recv {
 
 sub vcl_hash {
     hash_data(req.http.X-Original-Url);
-    hash_data(req.http.x-imtest-format-list);
-    hash_data(req.http.x-imtest-resolution);
-    hash_data(req.http.x-imtest-origin-domain);
+    hash_data(req.http.x-aim-format-list);
+    hash_data(req.http.x-aim-resolution);
+    hash_data(req.http.x-aim-origin-domain);
     return(lookup);
 }
 
@@ -97,16 +97,16 @@ sub vcl_synth {
 }
 
 sub vcl_deliver {
-    set resp.http.X-Imtest-use = req.http.x-imtest-use;
-    set resp.http.X-Imtest-client-ip = client.ip;
+    set resp.http.X-aim-use = req.http.x-aim-use;
+    set resp.http.X-aim-client-ip = client.ip;
     if (obj.hits > 0) {
-        set resp.http.X-imtest-cache = "HIT";
-        set resp.http.X-imtest-cache-hits = obj.hits;
+        set resp.http.X-aim-cache = "HIT";
+        set resp.http.X-aim-cache-hits = obj.hits;
     }
     else {
-        set resp.http.X-imtest-cache = "MISS";
+        set resp.http.X-aim-cache = "MISS";
     }
-    if (req.http.X-imtest-debug != "true") {
-        header.regsub(resp, "^(?i)X-imtest.+", "");
+    if (req.http.X-aim-debug != "true") {
+        header.regsub(resp, "^(?i)X-aim.+", "");
     }
 }

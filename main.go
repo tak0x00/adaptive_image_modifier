@@ -21,15 +21,15 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		origin_domain := r.Header.Get("x-imtest-origin-domain")
-		avaliable_format_csv := r.Header.Get("x-imtest-format-list")
-		max_width_string := r.Header.Get("x-imtest-resolution")
+		origin_domain := r.Header.Get("x-aim-origin-domain")
+		avaliable_format_csv := r.Header.Get("x-aim-format-list")
+		max_width_string := r.Header.Get("x-aim-resolution")
 		path := r.URL.Path
 		max_width, _ := strconv.Atoi(max_width_string)
 
-		w.Header().Add("X-imtest-request_path", path)
-		w.Header().Add("X-imtest-avaliable_format", avaliable_format_csv)
-		w.Header().Add("X-imtest-max_width", max_width_string)
+		w.Header().Add("X-aim-request_path", path)
+		w.Header().Add("X-aim-avaliable_format", avaliable_format_csv)
+		w.Header().Add("X-aim-max_width", max_width_string)
 
 		resp, err := http.Get("https://" + origin_domain + path)
 		if err != nil {
@@ -86,8 +86,8 @@ func main() {
 		// 気休め。
 		src_img = nil
 
-		w.Header().Add("X-imtest-convert_width", strconv.Itoa(dst.Bounds().Dx()))
-		w.Header().Add("X-imtest-convert_height", strconv.Itoa(dst.Bounds().Dy()))
+		w.Header().Add("X-aim-convert_width", strconv.Itoa(dst.Bounds().Dx()))
+		w.Header().Add("X-aim-convert_height", strconv.Itoa(dst.Bounds().Dy()))
 
 		avaliable_format := strings.Split(avaliable_format_csv, "_")
 
@@ -98,7 +98,7 @@ func main() {
 			selected_format = avaliable_format[0]
 		}
 
-		w.Header().Add("X-imtest-convert_format", selected_format)
+		w.Header().Add("X-aim-convert_format", selected_format)
 
 		// 形式変換
 		switch selected_format {
