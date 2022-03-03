@@ -1,1 +1,1 @@
-# if (req.http.X-UA-Device ~ "pc") {set req.http.x-imtest-resolution = "4096";}
+# if (req.http.X-UA-Device ~ "pc") {set req.http.x-aim-resolution = "4096";}

@@ -24,5 +24,5 @@ varnish側は下記の通りに。
 ```
 docker cp varnish/default.vcl VARNISH_CONTAINER_NAME:/etc/varnish/default.vcl \
 && docker exec VARNISH_CONTAINER_NAME /replaceenv.sh \
-&& docker exec imtest-varnish-1 varnishreload
+&& docker exec aim-varnish-1 varnishreload
 ```
