@@ -26,3 +26,11 @@ docker cp varnish/default.vcl VARNISH_CONTAINER_NAME:/etc/varnish/default.vcl \
 && docker exec VARNISH_CONTAINER_NAME /replaceenv.sh \
 && docker exec aim-varnish-1 varnishreload
 ```
+
+# デバッグヘッダーの確認について
+
+```
+curl -vv -H "X-aim-debug: true" http://127.0.0.1:8080/hoge.png
+```
+
+という感じで、 `X-aim-debug` ヘッダに `true` のみを入れて投げると `x-aim-***` ヘッダに情報が返ってきます。
