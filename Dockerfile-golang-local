@@ -1,0 +1,22 @@
+FROM golang:alpine
+
+RUN apk update && apk add --no-cache make\
+        gcc\
+        g++\
+        libwebp\
+        binutils-gold \
+        curl \
+        gnupg \
+        libgcc \
+        linux-headers \
+        libwebp-dev\
+        tiff-dev\
+        libzip\
+        libzip-dev\
+        libjpeg-turbo-dev
+
+RUN go install github.com/cosmtrek/air@latest
+
+COPY entrypoint.sh /
+RUN chmod 755 /entrypoint.sh
+CMD ["sh", "/entrypoint.sh"]
