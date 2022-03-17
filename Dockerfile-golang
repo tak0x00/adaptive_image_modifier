@@ -1,4 +1,4 @@
-FROM golang:alpine as builder
+FROM golang:alpine
 
 WORKDIR /go/src
 COPY ./go/src /go/src
@@ -23,11 +23,8 @@ RUN go get -u github.com/pixiv/go-libjpeg/jpeg
 RUN go build -o /main
 
 
-FROM alpine:3.9.4
 RUN adduser -S -D -H -h /app appuser
 USER appuser
-COPY --from=builder /main /app/
-WORKDIR /app
 
 EXPOSE 8080
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["/main"]
