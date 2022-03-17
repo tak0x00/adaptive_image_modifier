@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  varnish:
+    build:
+      context: .
+      dockerfile: Dockerfile-varnish
+    restart: always
+    ports:
+      - 127.0.0.1:8080:80
+      - target: 80
+        x-aws-protocol: http
+    environment:
+      - ORIGIN_DOMAIN=your_origin_domain
+      - PURGEABLE_NETWORK="192.168.0.0"/24
+
+  app:
+    build:
+      context: ./go/src/
+      dockerfile: ../../Dockerfile-golang-local
+    volumes:
+      - ./go/src/:/go/src

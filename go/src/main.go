@@ -20,6 +20,11 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		// LBへ登録するためだけなので何もチェックしない
+		w.WriteHeader(200)
+		return
+	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		origin_domain := r.Header.Get("x-aim-origin-domain")
 		avaliable_format_csv := r.Header.Get("x-aim-format-list")

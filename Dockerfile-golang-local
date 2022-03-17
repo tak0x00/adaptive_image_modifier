@@ -1,8 +1,5 @@
 FROM golang:alpine
 
-WORKDIR /go/src
-COPY ./go/src /go/src
-
 RUN apk update && apk add --no-cache make\
         gcc\
         g++\
@@ -17,14 +14,9 @@ RUN apk update && apk add --no-cache make\
         libzip\
         libzip-dev\
         libjpeg-turbo-dev
-RUN go get -u github.com/kettek/apng
-RUN go get -u github.com/pixiv/go-libjpeg/jpeg
 
-RUN go build -o /main
+RUN go install github.com/cosmtrek/air@latest
 
-
-RUN adduser -S -D -H -h /app appuser
-USER appuser
-
-EXPOSE 8080
-ENTRYPOINT ["/main"]
+COPY entrypoint.sh /
+RUN chmod 755 /entrypoint.sh
+CMD ["sh", "/entrypoint.sh"]
