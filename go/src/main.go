@@ -106,17 +106,26 @@ func main() {
 		w.Header().Add("X-aim-convert_format", selected_format)
 
 		// 形式変換
+		outputImageBuffer := new(bytes.Buffer)
 		switch selected_format {
 		case "jpeg":
-			jpeg.Encode(w, dst, &jpeg.EncoderOptions{Quality: 100})
+			w.Header().Add("Content-Type", "image/jpeg")
+			jpeg.Encode(outputImageBuffer, dst, &jpeg.EncoderOptions{Quality: 100})
 		case "png":
-			png.Encode(w, dst)
+			w.Header().Add("Content-Type", "image/png")
+			png.Encode(outputImageBuffer, dst)
 		case "gif":
-			gif.Encode(w, dst, nil)
+			w.Header().Add("Content-Type", "image/gif")
+			gif.Encode(outputImageBuffer, dst, nil)
 		case "webp":
+			w.Header().Add("Content-Type", "image/webp")
 			con, _ := webp.ConfigPreset(webp.PresetDefault, 80)
-			err = webp.EncodeRGBA(w, dst, con)
+			err = webp.EncodeRGBA(outputImageBuffer, dst, con)
 		}
+
+		w.Header().Add("Content-Length", strconv.Itoa(outputImageBuffer.Len()))
+		w.Write(outputImageBuffer.Bytes())
+		w.(http.Flusher).Flush()
 	})
 	http.ListenAndServe(":8080", mux)
 }
