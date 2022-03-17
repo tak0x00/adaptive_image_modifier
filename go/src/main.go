@@ -74,7 +74,7 @@ func main() {
 			}
 		}
 
-		var dst *image.RGBA
+		var resizedImage *image.RGBA
 
 		// まずリサイズ
 		rct := src_img.Bounds()
@@ -82,17 +82,17 @@ func main() {
 			dst_width := float64(max_width)
 			dst_height := math.Ceil(dst_width / float64(rct.Dx()*rct.Dy()))
 
-			dst = image.NewRGBA(image.Rect(0, 0, int(dst_width), int(dst_height)))
-			draw.CatmullRom.Scale(dst, dst.Bounds(), src_img, src_img.Bounds(), draw.Over, nil)
+			resizedImage = image.NewRGBA(image.Rect(0, 0, int(dst_width), int(dst_height)))
+			draw.CatmullRom.Scale(resizedImage, resizedImage.Bounds(), src_img, src_img.Bounds(), draw.Over, nil)
 		} else {
-			dst = image.NewRGBA(image.Rect(0, 0, rct.Dx(), rct.Dy()))
-			draw.Copy(dst, image.Point{0, 0}, src_img, src_img.Bounds(), draw.Over, nil)
+			resizedImage = image.NewRGBA(image.Rect(0, 0, rct.Dx(), rct.Dy()))
+			draw.Copy(resizedImage, image.Point{0, 0}, src_img, src_img.Bounds(), draw.Over, nil)
 		}
 		// 気休め。
 		src_img = nil
 
-		w.Header().Add("X-aim-convert_width", strconv.Itoa(dst.Bounds().Dx()))
-		w.Header().Add("X-aim-convert_height", strconv.Itoa(dst.Bounds().Dy()))
+		w.Header().Add("X-aim-convert_width", strconv.Itoa(resizedImage.Bounds().Dx()))
+		w.Header().Add("X-aim-convert_height", strconv.Itoa(resizedImage.Bounds().Dy()))
 
 		avaliable_format := strings.Split(avaliable_format_csv, "_")
 
@@ -110,17 +110,17 @@ func main() {
 		switch selected_format {
 		case "jpeg":
 			w.Header().Add("Content-Type", "image/jpeg")
-			jpeg.Encode(outputImageBuffer, dst, &jpeg.EncoderOptions{Quality: 100})
+			jpeg.Encode(outputImageBuffer, resizedImage, &jpeg.EncoderOptions{Quality: 100})
 		case "png":
 			w.Header().Add("Content-Type", "image/png")
-			png.Encode(outputImageBuffer, dst)
+			png.Encode(outputImageBuffer, resizedImage)
 		case "gif":
 			w.Header().Add("Content-Type", "image/gif")
-			gif.Encode(outputImageBuffer, dst, nil)
+			gif.Encode(outputImageBuffer, resizedImage, nil)
 		case "webp":
 			w.Header().Add("Content-Type", "image/webp")
 			con, _ := webp.ConfigPreset(webp.PresetDefault, 80)
-			err = webp.EncodeRGBA(outputImageBuffer, dst, con)
+			err = webp.EncodeRGBA(outputImageBuffer, resizedImage, con)
 		}
 
 		w.Header().Add("Content-Length", strconv.Itoa(outputImageBuffer.Len()))
