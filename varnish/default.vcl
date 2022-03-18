@@ -31,6 +31,10 @@ sub vcl_recv {
     if (req.url ~ "\/favicon.ico$") {
         return (synth(1410, "It's gone."));
     }
+    if (req.url ~ "\/health$") {
+        set req.backend_hint = optimizer;
+        return (pass);
+    }
 
     if (req.method == "PURGE") {
         if (!client.ip ~ purge) {
