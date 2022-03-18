@@ -26,9 +26,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-golang
-    ports:
-      - target: 8080
-        x-aws-protocol: http
     deploy:
       x-aws-autoscaling:
         min: 1
@@ -37,9 +34,9 @@ services:
 
 x-aws-cloudformation:
   Resources:
-    App8080TargetGroup:
+    Varnish80TargetGroup:
       Properties:
         Protocol: HTTP
         HealthCheckPath: /health
         Matcher:
-          HttpCode: 200-499
+          HttpCode: 200
