@@ -23,6 +23,7 @@ func main() {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// LBへ登録するためだけなので何もチェックしない
 		w.WriteHeader(200)
+		w.Write([]byte("OK"))
 		return
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
