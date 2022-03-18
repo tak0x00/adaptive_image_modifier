@@ -65,6 +65,7 @@ sub vcl_recv {
 }
 
 sub vcl_hash {
+    hash_data(req.method);
     hash_data(req.http.X-Original-Url);
     hash_data(req.http.x-aim-format-list);
     hash_data(req.http.x-aim-resolution);
@@ -73,6 +74,9 @@ sub vcl_hash {
 }
 
 sub vcl_backend_fetch {
+    if(bereq.http.method == "HEAD") {
+        set bereq.method = "GET";
+    }
     if ( bereq.backend == default ) {
         set bereq.http.host = "${ORIGIN_DOMAIN}";
     }
