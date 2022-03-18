@@ -111,6 +111,8 @@ sub vcl_deliver {
         set resp.http.X-aim-cache = "MISS";
     }
     if (req.http.X-aim-debug != "true") {
-        header.regsub(resp, "^(?i)X-aim.+", "");
+        # workaround to remove header without varnish plus...
+        header.regsub(resp, "^(?i)X-aim.+", "X-REMOVE-TARGET: 1");
+        unset resp.http.X-REMOVE-TARGET;
     }
 }
