@@ -40,6 +40,7 @@ func main() {
 		resp, err := http.Get("https://" + origin_domain + path)
 		if err != nil {
 			w.WriteHeader(500)
+			w.Header().Add("X-aim-errormsg", err.Error())
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -53,8 +54,9 @@ func main() {
 
 		src_img, src_image_type, err := image.Decode(bytes.NewReader(respBody))
 		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
+			// 読み込みエラったら素通しする
+			w.Header().Add("X-aim-errormsg", err.Error())
+			w.Write(respBody)
 			return
 		}
 		// agif/apngは処理しない issue#2
