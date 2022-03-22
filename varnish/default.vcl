@@ -1,6 +1,7 @@
 vcl 4.0;
 import std;
 import header;
+import dynamic;
 include "opts/varnish-devicedetect/devicedetect.vcl";
 include "opts/pathlist.vcl";
 
@@ -12,13 +13,16 @@ acl purge {
     ${PURGEABLE_NETWORK};
 }
 
-backend optimizer {
-    .host = "app";
-    .port = "8080";
-}
 backend default {
     .host = "${ORIGIN_DOMAIN}";
     .port = "80";
+}
+
+sub vcl_init {
+  new optimizer_director = dynamic.director(
+    port = "8080",
+    ttl = 1s,
+  );
 }
 
 sub vcl_recv {
@@ -32,7 +36,7 @@ sub vcl_recv {
         return (synth(1410, "It's gone."));
     }
     if (req.url ~ "\/health$") {
-        set req.backend_hint = optimizer;
+        set req.backend_hint = optimizer_director.backend("app");
         return (pass);
     }
 
@@ -46,13 +50,18 @@ sub vcl_recv {
         return(synth(200, "PURGE accepted"));
     }
 
-    set req.http.x-aim-use = "true";
-    call check_target_path;
-    if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
+    if (req.restarts >= 1) {
         set req.http.x-aim-use = "false";
-    }
-    if (req.http.X-Original-Url ~ "NO_IM") {
-        set req.http.x-aim-use = "false";
+        set req.http.x-aim-backend-dead = "true";
+    } else {
+        set req.http.x-aim-use = "true";
+        call check_target_path;
+        if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
+            set req.http.x-aim-use = "false";
+        }
+        if (req.http.X-Original-Url ~ "NO_IM") {
+            set req.http.x-aim-use = "false";
+        }
     }
 
 
@@ -62,9 +71,13 @@ sub vcl_recv {
         include "opts/default-device-resolutionlist.vcl";
         include "opts/device-formatlist.vcl";
         include "opts/device-resolutionlist.vcl";
-        set req.backend_hint = optimizer;
+        set req.backend_hint = optimizer_director.backend("app");
     } else {
         set req.backend_hint = default;
+    }
+
+    if (req.http.x-aim-backend-dead == "true") {
+        return (pass);
     }
 }
 
@@ -92,6 +105,13 @@ sub vcl_backend_response {
     unset beresp.http.Cache-Control;
     unset beresp.http.Expires;
 }
+sub vcl_backend_error {
+    set beresp.http.X-aim-require-restart = "true";
+    set beresp.ttl = 1s;
+    set beresp.grace = 0s;
+    set beresp.keep = 0s;
+    return (deliver);
+}
 
 sub vcl_synth {
     if (resp.status == 1404) {
@@ -105,6 +125,11 @@ sub vcl_synth {
 }
 
 sub vcl_deliver {
+    if (resp.http.X-aim-require-restart) {
+        return (restart);
+    }
+
+    set resp.http.x-aim-backend-dead = req.http.x-aim-backend-dead;
     set resp.http.X-aim-use = req.http.x-aim-use;
     set resp.http.X-aim-client-ip = client.ip;
     if (obj.hits > 0) {

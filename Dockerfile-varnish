@@ -1,7 +1,7 @@
-FROM varnish:7.0-alpine
+FROM --platform=linux/amd64 varnish:7.0.1-alpine
 
+RUN apk add make cmake gcc g++ bash git automake autoconf libtool python3 py-docutils libssl1.1 libidn2-dev unbound-libs unbound-dev libuv-dev libevent-dev check-dev openssl-dev yaml-dev
 RUN mkdir -p /tmp/vmods && \
-    apk --no-cache add make gcc g++ bash git automake autoconf libtool python3 py-docutils && \
     cd /tmp/vmods && \
     git clone --branch 7.0 --single-branch https://github.com/varnish/varnish-modules.git && \
     cd varnish-modules && \
@@ -10,7 +10,22 @@ RUN mkdir -p /tmp/vmods && \
     make && \
     make install && \
     rm -rf /tmp/vmods
-RUN apk del make gcc g++ bash git automake autoconf python3 py-docutils
+
+RUN mkdir -p /tmp/libgetdns && \
+        cd /tmp/libgetdns && \
+        git clone --branch v1.7.0 --single-branch https://github.com/getdnsapi/getdns.git && \
+        cd getdns && git submodule update --init && \
+        cmake . && \
+        make && make install && \
+        rm -rf /tmp/libgetdns
+ENV VMODDIR=/usr/lib/varnish/vmods VARNISHSRC=/usr/include/varnish 
+RUN mkdir -p /tmp/vmod-dynamic && \
+    cd /tmp/vmod-dynamic && \
+    git clone --branch 7.0 --single-branch https://github.com/nigoroll/libvmod-dynamic.git && \
+    cd libvmod-dynamic && \
+    ./autogen.sh && ./configure && make && make install && \
+    rm -rf /tmp/vmod-dynamic
+RUN apk del make cmake gcc g++ bash git automake autoconf python3 py-docutils
 
 COPY varnish/default.vcl /etc/varnish/
 COPY varnish/opts /etc/varnish/opts
@@ -18,4 +33,4 @@ COPY varnish/replaceenv.sh /
 COPY varnish/entrypoint.sh /
 RUN chmod 755 /replaceenv.sh
 RUN chmod 755 /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/bin/sh", "/entrypoint.sh"]
