@@ -101,12 +101,17 @@ sub vcl_backend_fetch {
 }
 
 sub vcl_backend_response {
+    if (beresp.http.X-aim-errormsg) {
+        set beresp.uncacheable = true;
+        std.log("backend responded error message. abandon. IP:" + beresp.backend.ip + " url: " + bereq.url );
+        set beresp.http.X-aim-abandon = "true";
+    }
     unset beresp.http.Vary;
     unset beresp.http.Cache-Control;
     unset beresp.http.Expires;
 }
 sub vcl_backend_error {
-    std.syslog(9, "backend gone, IP:" + beresp.backend.ip + " url: " + bereq.url )
+    std.log("backend gone, url: " + bereq.url );
     set beresp.http.X-aim-require-restart = "true";
     set beresp.ttl = 1s;
     set beresp.grace = 0s;
