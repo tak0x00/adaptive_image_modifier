@@ -106,6 +106,7 @@ sub vcl_backend_response {
     unset beresp.http.Expires;
 }
 sub vcl_backend_error {
+    std.syslog(9, "backend gone, IP:" + beresp.backend.ip + " url: " + bereq.url )
     set beresp.http.X-aim-require-restart = "true";
     set beresp.ttl = 1s;
     set beresp.grace = 0s;
