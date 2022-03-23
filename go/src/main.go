@@ -40,6 +40,7 @@ func main() {
 		max_width_string := r.Header.Get("x-aim-resolution")
 		path := r.URL.Path
 		max_width, _ := strconv.Atoi(max_width_string)
+		var err error
 
 		w.Header().Add("X-aim-request_path", path)
 		w.Header().Add("X-aim-avaliable_format", avaliable_format_csv)
@@ -65,7 +66,6 @@ func main() {
 		if err != nil {
 			// 読み込みエラったら素通しする
 			fmt.Println("file read error. " + path + " msg: " + err.Error())
-			w.Header().Add("X-aim-errormsg", err.Error())
 			w.Write(respBody)
 			return
 		}
@@ -124,17 +124,24 @@ func main() {
 		switch selected_format {
 		case "jpeg":
 			w.Header().Add("Content-Type", "image/jpeg")
-			libjpeg.Encode(outputImageBuffer, resizedImage, &libjpeg.EncoderOptions{Quality: 100})
+			err = libjpeg.Encode(outputImageBuffer, resizedImage, &libjpeg.EncoderOptions{Quality: 100})
 		case "png":
 			w.Header().Add("Content-Type", "image/png")
-			png.Encode(outputImageBuffer, resizedImage)
+			err = png.Encode(outputImageBuffer, resizedImage)
 		case "gif":
 			w.Header().Add("Content-Type", "image/gif")
-			gif.Encode(outputImageBuffer, resizedImage, nil)
+			err = gif.Encode(outputImageBuffer, resizedImage, nil)
 		case "webp":
 			w.Header().Add("Content-Type", "image/webp")
 			con, _ := webp.ConfigPreset(webp.PresetDefault, 80)
 			err = webp.EncodeRGBA(outputImageBuffer, resizedImage, con)
+		}
+		if err != nil {
+			// 変換エラったら素通しする
+			fmt.Println("file encode error. " + path + " msg: " + err.Error())
+			w.Header().Add("X-aim-errormsg", err.Error())
+			w.Write(respBody)
+			return
 		}
 
 		w.Header().Add("Content-Length", strconv.Itoa(outputImageBuffer.Len()))
