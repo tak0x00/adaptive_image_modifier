@@ -39,6 +39,7 @@ func main() {
 
 		resp, err := http.Get("https://" + origin_domain + path)
 		if err != nil {
+			fmt.Println("backend error. " + path + " msg: " + err.Error())
 			w.WriteHeader(500)
 			w.Header().Add("X-aim-errormsg", err.Error())
 			w.Write([]byte(err.Error()))
@@ -55,6 +56,7 @@ func main() {
 		src_img, src_image_type, err := image.Decode(bytes.NewReader(respBody))
 		if err != nil {
 			// 読み込みエラったら素通しする
+			fmt.Println("file read error. " + path + " msg: " + err.Error())
 			w.Header().Add("X-aim-errormsg", err.Error())
 			w.Write(respBody)
 			return
@@ -63,6 +65,7 @@ func main() {
 		if src_image_type == "gif" {
 			tmpimg, _ := gif.DecodeAll(bytes.NewReader(respBody))
 			if len(tmpimg.Image) > 1 {
+				fmt.Println("agif detected. " + path)
 				w.WriteHeader(resp.StatusCode)
 				w.Write(respBody)
 				return
@@ -71,6 +74,7 @@ func main() {
 		if src_image_type == "png" {
 			tmpimg, _ := apng.DecodeAll(bytes.NewReader(respBody))
 			if len(tmpimg.Frames) > 1 {
+				fmt.Println("apng detected. " + path)
 				w.WriteHeader(resp.StatusCode)
 				w.Write(respBody)
 				return
@@ -100,7 +104,6 @@ func main() {
 		avaliable_format := strings.Split(avaliable_format_csv, "_")
 
 		selected_format := src_image_type
-		fmt.Println(selected_format)
 		// FIXME: issue#4
 		if len(avaliable_format) > 0 {
 			selected_format = avaliable_format[0]
