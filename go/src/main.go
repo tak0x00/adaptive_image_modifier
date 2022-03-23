@@ -6,19 +6,27 @@ import (
 	"image"
 	"image/gif"
 	"image/png"
+	"image/jpeg"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
+	"io"
 
 	"github.com/harukasan/go-libwebp/webp"
 	"github.com/kettek/apng"
-	"github.com/pixiv/go-libjpeg/jpeg"
+	libjpeg "github.com/pixiv/go-libjpeg/jpeg"
 	"golang.org/x/image/draw"
 )
 
+func jpegDecoder(r io.Reader) (image.Image, error) {
+    return libjpeg.Decode(r, &libjpeg.DecoderOptions{})
+}
+
 func main() {
+    image.RegisterFormat("jpeg", "\xff\xd8", jpegDecoder, jpeg.DecodeConfig)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// LBへ登録するためだけなので何もチェックしない
@@ -116,7 +124,7 @@ func main() {
 		switch selected_format {
 		case "jpeg":
 			w.Header().Add("Content-Type", "image/jpeg")
-			jpeg.Encode(outputImageBuffer, resizedImage, &jpeg.EncoderOptions{Quality: 100})
+			libjpeg.Encode(outputImageBuffer, resizedImage, &libjpeg.EncoderOptions{Quality: 100})
 		case "png":
 			w.Header().Add("Content-Type", "image/png")
 			png.Encode(outputImageBuffer, resizedImage)
