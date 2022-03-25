@@ -144,7 +144,7 @@ func main() {
 		}
 		if err != nil {
 			// 変換エラったら素通しする
-			fmt.Println("file encode error. " + path + " msg: " + err.Error())
+			fmt.Println("file encode error. type: " + selected_format + " path: " + path + " msg: " + err.Error())
 			w.Header().Add("X-aim-errormsg", err.Error())
 			w.Write(respBody)
 			return
