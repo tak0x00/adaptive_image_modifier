@@ -1,7 +1,7 @@
 FROM golang:alpine
 
 WORKDIR /go/src
-COPY ./go/src /go/src
+ADD ./go/src /go/src
 
 RUN apk update && apk add --no-cache make\
         gcc\

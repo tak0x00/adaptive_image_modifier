@@ -27,10 +27,10 @@ RUN mkdir -p /tmp/vmod-dynamic && \
     rm -rf /tmp/vmod-dynamic
 RUN apk del make cmake gcc g++ bash git automake autoconf python3 py-docutils
 
-COPY varnish/default.vcl /etc/varnish/
-COPY varnish/opts /etc/varnish/opts
-COPY varnish/replaceenv.sh /
-COPY varnish/entrypoint.sh /
+ADD varnish/default.vcl /etc/varnish/
+ADD varnish/opts /etc/varnish/opts
+ADD varnish/replaceenv.sh /
+ADD varnish/entrypoint.sh /
 RUN chmod 755 /replaceenv.sh
 RUN chmod 755 /entrypoint.sh
 CMD ["/bin/sh", "/entrypoint.sh"]
