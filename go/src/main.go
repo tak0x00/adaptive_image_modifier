@@ -100,11 +100,17 @@ func main() {
 			resizedImage = image.NewRGBA(image.Rect(0, 0, int(dst_width), int(dst_height)))
 			draw.CatmullRom.Scale(resizedImage, resizedImage.Bounds(), src_img, src_img.Bounds(), draw.Over, nil)
 		} else {
-			resizedImage = image.NewRGBA(image.Rect(0, 0, rct.Dx(), rct.Dy()))
-			draw.Copy(resizedImage, image.Point{0, 0}, src_img, src_img.Bounds(), draw.Over, nil)
+			resizedImage = func (src image.Image) *image.RGBA {
+				if dst, ok := src.(*image.RGBA); ok {
+					return dst
+				}
+				var dst *image.RGBA
+				rct := src.Bounds()
+				dst = image.NewRGBA(image.Rect(0, 0, rct.Dx(), rct.Dy()))
+				draw.Copy(dst, image.Point{0, 0}, src_img, rct, draw.Over, nil)
+				return dst
+			}(src_img)
 		}
-		// 気休め。
-		src_img = nil
 
 		w.Header().Add("X-aim-convert_width", strconv.Itoa(resizedImage.Bounds().Dx()))
 		w.Header().Add("X-aim-convert_height", strconv.Itoa(resizedImage.Bounds().Dy()))
