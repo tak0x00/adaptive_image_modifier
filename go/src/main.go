@@ -27,7 +27,7 @@ import (
 )
 
 func jpegDecoder(r io.Reader) (image.Image, error) {
-    return libjpeg.Decode(r, &libjpeg.DecoderOptions{})
+	return libjpeg.DecodeIntoRGBA(r, &libjpeg.DecoderOptions{})
 }
 
 func main() {
