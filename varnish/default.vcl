@@ -44,8 +44,7 @@ sub vcl_recv {
         return (synth(1410, "It's gone."));
     }
     if (req.url ~ "\/health$") {
-        set req.backend_hint = optimizer_director.backend("app");
-        return (pass);
+        return (synth(200, "ok"));
     }
 
     if (req.method == "PURGE") {
@@ -61,17 +60,19 @@ sub vcl_recv {
     if (req.restarts >= 1) {
         set req.http.x-aim-use = "false";
         set req.http.x-aim-backend-dead = "true";
-    } else {
-        set req.http.x-aim-use = "true";
-        call check_target_path;
-        if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
-            set req.http.x-aim-use = "false";
-        }
-        if (req.http.X-Original-Url ~ "NO_IM") {
-            set req.http.x-aim-use = "false";
-        }
+        set req.backend_hint = default;
+        std.log("restart detected. backend gone. fallback to default origin. url: " + req.url );
+        return (pass);
     }
 
+    set req.http.x-aim-use = "true";
+    call check_target_path;
+    if (req.url !~ "\.(png|jpg|jpeg|gif|webp)$") {
+        set req.http.x-aim-use = "false";
+    }
+    if (req.http.X-Original-Url ~ "NO_IM") {
+        set req.http.x-aim-use = "false";
+    }
 
     if (req.http.x-aim-use == "true") {
         set req.http.x-aim-origin-domain = "${ORIGIN_DOMAIN}";
@@ -80,13 +81,18 @@ sub vcl_recv {
         include "opts/device-formatlist.vcl";
         include "opts/device-resolutionlist.vcl";
         set req.backend_hint = optimizer_director.backend("app");
+        if (!std.healthy(req.backend_hint)) {
+            set req.http.x-aim-use = "false";
+            set req.http.x-aim-backend-dead = "true";
+            set req.backend_hint = default;
+            std.log("backend dead detected. fallback to default origin. url: " + req.url );
+            return (pass);
+        }
     } else {
         set req.backend_hint = default;
     }
 
-    if (req.http.x-aim-backend-dead == "true") {
-        return (pass);
-    }
+
 }
 
 sub vcl_hash {
@@ -99,6 +105,10 @@ sub vcl_hash {
 }
 
 sub vcl_backend_fetch {
+    if (bereq.retries > 0) {
+        std.log("retry detected. backend gone. fallback to default origin. url: " + bereq.url );
+        set bereq.backend = default;
+    }
     if(bereq.http.method == "HEAD") {
         set bereq.method = "GET";
     }
@@ -113,18 +123,24 @@ sub vcl_backend_response {
         set beresp.uncacheable = true;
         std.log("backend responded error message. abandon. IP:" + beresp.backend.ip + " url: " + bereq.url );
         set beresp.http.X-aim-abandon = "true";
+        return (pass(0s));
     }
+    if (bereq.retries > 0) {
+        std.log("retry detected. backend gone. not cache url: " + bereq.url );
+        set beresp.uncacheable = true;
+        set beresp.http.X-aim-backend-dead = "true";
+        return (pass(0s));
+    }
+    set beresp.uncacheable = true;
     unset beresp.http.Vary;
     unset beresp.http.Cache-Control;
     unset beresp.http.Expires;
 }
 sub vcl_backend_error {
-    std.log("backend gone, url: " + bereq.url );
-    set beresp.http.X-aim-require-restart = "true";
-    set beresp.ttl = 1s;
-    set beresp.grace = 0s;
-    set beresp.keep = 0s;
-    return (deliver);
+    if (beresp.backend.name != "default") {
+        std.log("backend gone, url: " + bereq.url );
+        return (retry);
+    }
 }
 
 sub vcl_synth {
@@ -139,11 +155,9 @@ sub vcl_synth {
 }
 
 sub vcl_deliver {
-    if (resp.http.X-aim-require-restart) {
-        return (restart);
+    if (!resp.http.x-aim-backend-dead && req.http.x-aim-backend-dead) {
+        set resp.http.x-aim-backend-dead = req.http.x-aim-backend-dead;
     }
-
-    set resp.http.x-aim-backend-dead = req.http.x-aim-backend-dead;
     set resp.http.X-aim-use = req.http.x-aim-use;
     set resp.http.X-aim-client-ip = client.ip;
     if (obj.hits > 0) {
