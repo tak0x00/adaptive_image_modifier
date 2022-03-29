@@ -18,6 +18,8 @@ import (
 	"github.com/kettek/apng"
 	libjpeg "github.com/pixiv/go-libjpeg/jpeg"
 	"golang.org/x/image/draw"
+
+	_ "net/http/pprof"
 )
 
 func jpegDecoder(r io.Reader) (image.Image, error) {
@@ -26,6 +28,9 @@ func jpegDecoder(r io.Reader) (image.Image, error) {
 
 func main() {
     image.RegisterFormat("jpeg", "\xff\xd8", jpegDecoder, jpeg.DecodeConfig)
+	go func() {
+		http.ListenAndServe(":6060", nil)
+	}()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
