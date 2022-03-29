@@ -17,12 +17,20 @@ backend default {
     .host = "${ORIGIN_DOMAIN}";
     .port = "80";
 }
+probe app_probe {
+    .url = "/health";
+    .timeout = 1s;
+    .window = 8;
+    .threshold = 3;
+    .interval  = 10s;
+}
 
 sub vcl_init {
-  new optimizer_director = dynamic.director(
-    port = "8080",
-    ttl = 1s,
-  );
+    new optimizer_director = dynamic.director(
+        port = "8080",
+        connect_timeout = 0.5s,
+        probe = app_probe,
+    );
 }
 
 sub vcl_recv {
