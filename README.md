@@ -1,7 +1,7 @@
 # これはなに
 
 user-agentをもとに、リクエストされた画像を事前定義された解像度や形式に変換して返却する仕組みです
-(某Imge○luxとか○kamai ImageM○nagerとかの自家版です)
+(某Image○luxとか○kamai ImageM○nagerとかの自家版です)
 
 user-agentに対する解像度や対応フォーマットはvarnish configに記述します。
 そのため、更新後はvarnishをreloadする必要があります。
