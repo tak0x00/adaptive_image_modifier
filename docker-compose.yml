@@ -14,10 +14,12 @@ services:
       - ORIGIN_DOMAIN=your_origin_domain
       - PURGEABLE_NETWORK="192.168.0.0"/24
     deploy:
-      x-aws-autoscaling:
-        min: 1
-        max: 3
-        cpu: 75
+      replicas: 5
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
     depends_on:
       - "app"
   app:
@@ -29,10 +31,12 @@ services:
     environment:
       - MAX_CONNECTIONS="11"
     deploy:
-      x-aws-autoscaling:
-        min: 1
-        max: 5
-        cpu: 75
+      replicas: 10
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
 
 x-aws-cloudformation:
   Resources:
