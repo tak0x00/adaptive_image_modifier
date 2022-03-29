@@ -19,6 +19,7 @@ RUN apk update && apk add --no-cache make\
         libjpeg-turbo-dev
 RUN go get -u github.com/kettek/apng
 RUN go get -u github.com/pixiv/go-libjpeg/jpeg
+RUN go get golang.org/x/net/netutil
 
 RUN go build -o /main
 

@@ -26,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-golang
+    environment:
+      - MAX_CONNECTIONS="11"
     deploy:
       x-aws-autoscaling:
         min: 1

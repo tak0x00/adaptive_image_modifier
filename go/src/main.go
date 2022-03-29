@@ -9,10 +9,14 @@ import (
 	"image/jpeg"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"io"
+	"os"
+
+	"golang.org/x/net/netutil"
 
 	"github.com/harukasan/go-libwebp/webp"
 	"github.com/kettek/apng"
@@ -159,5 +163,16 @@ func main() {
 		w.Write(outputImageBuffer.Bytes())
 		w.(http.Flusher).Flush()
 	})
-	http.ListenAndServe(":8080", mux)
+
+	listener, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		fmt.Println(":8080 listen error. msg: " + err.Error())
+		os.Exit(1)
+	}
+	max_conn, err := strconv.Atoi(os.Getenv("MAX_CONNECTIONS"))
+	limited_listener := netutil.LimitListener(listener, max_conn)
+	defer limited_listener.Close()
+	fmt.Println("start with max_connection: " + strconv.Itoa(max_conn))
+
+	http.Serve(limited_listener, mux)
 }
