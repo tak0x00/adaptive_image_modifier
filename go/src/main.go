@@ -31,7 +31,7 @@ func jpegDecoder(r io.Reader) (image.Image, error) {
 }
 
 func main() {
-    image.RegisterFormat("jpeg", "\xff\xd8", jpegDecoder, jpeg.DecodeConfig)
+	image.RegisterFormat("jpeg", "\xff\xd8", jpegDecoder, jpeg.DecodeConfig)
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
