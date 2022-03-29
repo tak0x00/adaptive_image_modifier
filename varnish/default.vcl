@@ -131,7 +131,6 @@ sub vcl_backend_response {
         set beresp.http.X-aim-backend-dead = "true";
         return (pass(0s));
     }
-    set beresp.uncacheable = true;
     unset beresp.http.Vary;
     unset beresp.http.Cache-Control;
     unset beresp.http.Expires;
